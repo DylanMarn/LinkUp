@@ -33,12 +33,22 @@ def user():
     while not name:
         name = get_name(input("What is your name? "))
         while True:
-            print(f"Hello {name},") 
-            response = input("is this how your would like to be addressed? (Y/N)").upper()
+            response = input(f"Hello {name}, is this how you would like to be addressed? (Y/N)").upper()
             if response == "Y": # if confirmed, continue
                 break
             elif response == "N": # if denied, reset end date
                 name = None
+                break
+
+    state = None
+    while not state:
+        state = get_location(input("Where are you traveling? "))
+        while True:
+            response = input(f"{name}, it appears you are traveling to {state}, is this correct? (Y/N)").upper()
+            if response == "Y": # if confirmed, continue
+                break
+            elif response == "N": # if denied, reset end date
+                state = None
                 break
 
     s_date = None # initalize start date to nothing
@@ -76,9 +86,72 @@ def get_name(name):
 
 ## create a function to get user location
 
-def get_location():
+def get_location(location):
+    location = location.strip().title()
+    states = {
+        'AK': 'Alaska',
+        'AL': 'Alabama',
+        'AR': 'Arkansas',
+        'AZ': 'Arizona',
+        'CA': 'California',
+        'CO': 'Colorado',
+        'CT': 'Connecticut',
+        'DC': 'District of Columbia',
+        'DE': 'Delaware',
+        'FL': 'Florida',
+        'GA': 'Georgia',
+        'HI': 'Hawaii',
+        'IA': 'Iowa',
+        'ID': 'Idaho',
+        'IL': 'Illinois',
+        'IN': 'Indiana',
+        'KS': 'Kansas',
+        'KY': 'Kentucky',
+        'LA': 'Louisiana',
+        'MA': 'Massachusetts',
+        'MD': 'Maryland',
+        'ME': 'Maine',
+        'MI': 'Michigan',
+        'MN': 'Minnesota',
+        'MO': 'Missouri',
+        'MS': 'Mississippi',
+        'MT': 'Montana',
+        'NC': 'North Carolina',
+        'ND': 'North Dakota',
+        'NE': 'Nebraska',
+        'NH': 'New Hampshire',
+        'NJ': 'New Jersey',
+        'NM': 'New Mexico',
+        'NV': 'Nevada',
+        'NY': 'New York',
+        'OH': 'Ohio',
+        'OK': 'Oklahoma',
+        'OR': 'Oregon',
+        'PA': 'Pennsylvania',
+        'RI': 'Rhode Island',
+        'SC': 'South Carolina',
+        'SD': 'South Dakota',
+        'TN': 'Tennessee',
+        'TX': 'Texas',
+        'UT': 'Utah',
+        'VA': 'Virginia',
+        'VT': 'Vermont',
+        'WA': 'Washington',
+        'WI': 'Wisconsin',
+        'WV': 'West Virginia',
+        'WY': 'Wyoming'
+    }
 
-    ...
+    keysList = list(states.keys())
+    valuesList = list(states.values())
+
+    if location in keysList:
+        return states[location]
+    elif location in valuesList:
+        return location
+    else:
+        print("Invalid location")
+        print("Currently only U.S. states supported")
 
 ## create a function to get user date, returned in standard form
 
