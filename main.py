@@ -1,11 +1,23 @@
 # Dylan Marn
 
 '''
-LinkedUp: An app designed to help far away friends...
+LinkUp: An app designed to help far away friends...
     allow users to link up whenever possible and make the most of their time,
     by making the plans easy so they can make the memories
 
+2 users input their trip details and the program alerts the users if there is any overlap time where they could possible LinkUp
 
+Taget audience:
+    college students who moved away from friends for school - easily lets friend group know who is back home to LinkUp
+    friends that want help connecting whenever possible
+    friends that want an easy way to plan events (with app full functionality)
+    
+Further development:
+    add capacity for 2+ users
+    add a "home" location where another user's trip to that location will yield a LinkUp
+    add support for world-wide locations, possibly as specific as cities
+        add feature that matched users traveling to neighboring cities not just exact locations
+    add a "things to do" section that helps connected users find things to do in the area
 '''
 
 import re
@@ -23,15 +35,16 @@ class Trip:
     def __str__(self):
         return f"{self.name} is traveling to {self.location} from {self.startdate} to {self.enddate}"
 
+
 def main():
     print("Please fill out the following for user #1")
-    user1 = set_user()
+    user1 = set_user() # get user #1 trip details
     print(f"\nPlease fill out the following for user #2")
-    user2 = set_user()
+    user2 = set_user() # get user #2 trip details
 
     overlap = linkUp(user1, user2)
     try: # in case overlap = None
-        if overlap.days > 0: # if overlapping time
+        if overlap.days > 0: # if overlapping time exists
             print(user1)
             print(user2)
             print(f"{overlap.name} will both be in {overlap.location} from {overlap.startdate} to {overlap.enddate}")
@@ -111,14 +124,15 @@ def set_user():
         except:
             pass
 
-
     return Trip(name, location, date(*s_date), date(*e_date))
+
 
 ## create a function to get user name
 
 def get_name(name):
     name = name.strip().title()
     return name 
+
 
 ## create a function to get user location
 
@@ -195,6 +209,7 @@ def get_location(location):
         print("Currently only U.S. states supported")
         return None
 
+
 ## create a function to get user date, returned in standard form
 
 def get_date(givendate):
@@ -224,7 +239,7 @@ def get_date(givendate):
         day = int(matches1.group(2))
         year = int(matches1.group(3))
 
-    # test for date in MM/DD/YYYY format
+    # test for date in common MM/DD/YYYY or MM-DD-YYYY format
     matches2 = re.search(r"^(\d{1,2})[/-](\d{1,2})[/-](\d{1,4})$", givendate, re.IGNORECASE)
     if matches2:
         month = int(matches2.group(1))
@@ -237,9 +252,9 @@ def get_date(givendate):
                 print("Invalid days for given month")
                 return None
             elif month == 2: # February
-                if year%4 == 0:
-                    if year%100 == 0:
-                        if year%400 == 0:
+                if year%4 == 0: # leap year
+                    if year%100 == 0: # not leap year
+                        if year%400 == 0: # leap year
                             if day > 29:
                                 print("Invalid days for given month")
                                 return None
@@ -271,7 +286,9 @@ def get_date(givendate):
     print("2 MM-DD-YYYY")
     print("3 Month DD, YYYY")
 
+
 ## create a funtion to determine if two users have overlapping dates in the same location
+
 def linkUp(user1, user2):
     if user1.location == user2.location: # check for same trip location
         latest_start = max(user1.startdate, user2.startdate) # find the overlapping dates
@@ -282,7 +299,6 @@ def linkUp(user1, user2):
     else: # if no overlapping location
         print(f"There is no overlapping locations within {user1.name}'s and {user2.name}'s trips")
     
-
 
 if __name__ == "__main__":
     main()
