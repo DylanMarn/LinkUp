@@ -9,24 +9,37 @@ LinkedUp: An app designed to help far away friends...
 '''
 
 import re
+from datetime import date
 
-# class User stores data about each user
-class User:
-    def __init__(self, name, location, startdate, enddate):
+# class Trip stores important trip data
+class Trip:
+    def __init__(self, name, location, startdate, enddate, days=0):
         self.name = name
         self.location = location
         self.startdate = startdate
         self.enddate = enddate
+        self.days = days
     
     def __str__(self):
         return f"{self.name} is traveling to {self.location} from {self.startdate} to {self.enddate}"
 
 def main():
-
-
+    print("Please fill out the following for user #1")
     user1 = set_user()
+    print(f"\nPlease fill out the following for user #2")
+    user2 = set_user()
 
-    print(user1)
+    overlap = linkUp(user1, user2)
+    try: # in case overlap = None
+        if overlap.days > 0: # if overlapping time
+            print(user1)
+            print(user2)
+            print(f"{overlap.name} will both be in {overlap.location} from {overlap.startdate} to {overlap.enddate}")
+            print(f"{overlap.days} days to make memories")
+        else: # if no overlapping time
+            print(f"There is no overlapping time between {user1.name}'s and {user2.name}'s trips")
+    except:
+        pass
 
 
 ## create functions to get user input(name, location and dates) for 2+ users
@@ -48,7 +61,7 @@ def set_user():
 
     location = None # initalize state to nothing
     while not location: # loop until valid state
-        location = get_location(input("Where are you traveling? "))
+        location = get_location(input("Where are you traveling to? "))
         if location: # if valid state, confirm with user
             while True: # loop until user confirms or denies
                 response = input(f"{name}, it appears you are traveling to {location}, is this correct? (Y/N)").upper()
@@ -65,7 +78,7 @@ def set_user():
         s_date = get_date(input("Start date: "))
         if s_date: # if valid start date, confirm with user
             while True: # loop until user confirms or denies
-                print(f"The start of your trip is {s_date} %YYYY-MM-DD%")
+                print(f"The start of your trip is {date(*s_date)} %YYYY-MM-DD%")
                 response = input("Is this correct? (Y/N) ").upper()
                 if response == "Y": # if confirmed, continue
                     break
@@ -79,19 +92,27 @@ def set_user():
     e_date = None # initalize end date to nothing
     while not e_date: # loop until valid end date
         e_date = get_date(input("End date: "))
-        if e_date: # if valid start date, confirm with user
-            while True: # loop until user confirms or denies
-                print(f"The end of your trip is {e_date} %YYYY-MM-DD%")
-                response = input("Is this correct? (Y/N) ").upper()
-                if response == "Y": # if confirmed, continue
-                    break
-                elif response == "N": # if denied, reset end date
-                    e_date = None
-                    break
-                else:
-                    print("Invalid response")
+        try:
+            if (date(*e_date) - date(*s_date)).days >= 0:
+                if e_date: # if valid start date, confirm with user
+                    while True: # loop until user confirms or denies
+                        print(f"The end of your trip is {date(*e_date)} %YYYY-MM-DD%")
+                        response = input("Is this correct? (Y/N) ").upper()
+                        if response == "Y": # if confirmed, continue
+                            break
+                        elif response == "N": # if denied, reset end date
+                            e_date = None
+                            break
+                        else:
+                            print("Invalid response")
+            else:
+                e_date = None
+                print("Error: End date can not be before start date")
+        except:
+            pass
 
-    return User(name, location, s_date, e_date)
+
+    return Trip(name, location, date(*s_date), date(*e_date))
 
 ## create a function to get user name
 
@@ -176,7 +197,7 @@ def get_location(location):
 
 ## create a function to get user date, returned in standard form
 
-def get_date(date):
+def get_date(givendate):
     # create a dict of months and corresponding number
     months = {
         "January": 1,
@@ -193,7 +214,7 @@ def get_date(date):
         "December": 12
         }
     # test for date in MonthName DD, YYYY format
-    matches1 = re.search(r"^(.+) (\d{1,2}),? (\d{1,4})$", date, re.IGNORECASE)
+    matches1 = re.search(r"^(.+) (\d{1,2}),? (\d{1,4})$", givendate, re.IGNORECASE)
     if matches1:
         try: # match input month to corresponding number
             month = int(months[matches1.group(1)])
@@ -204,7 +225,7 @@ def get_date(date):
         year = int(matches1.group(3))
 
     # test for date in MM/DD/YYYY format
-    matches2 = re.search(r"^(\d{1,2})[/-](\d{1,2})[/-](\d{1,4})$", date, re.IGNORECASE)
+    matches2 = re.search(r"^(\d{1,2})[/-](\d{1,2})[/-](\d{1,4})$", givendate, re.IGNORECASE)
     if matches2:
         month = int(matches2.group(1))
         day = int(matches2.group(2))
@@ -215,15 +236,32 @@ def get_date(date):
             if month in [4,6,9,11] and day == 31: # months with only 30 days
                 print("Invalid days for given month")
                 return None
-            elif month == 2 and day > 29 and year%4 == 0: # February on leap years
-                print("Invalid days for given month")
-                return None
-            elif month == 2 and day > 28 and year%4 != 0: # February on non-leap years
-                print("Invalid days for given month")
-                return None
+            elif month == 2: # February
+                if year%4 == 0:
+                    if year%100 == 0:
+                        if year%400 == 0:
+                            if day > 29:
+                                print("Invalid days for given month")
+                                return None
+                            else:
+                                return [year, month, day]
+                        if day > 28:
+                            print("Invalid days for given month")
+                            return None
+                        else:
+                            return [year, month, day]
+                    if day > 29:
+                        print("Invalid days for given month")
+                        return None
+                    else:
+                        return [year, month, day]
+                if day > 28:
+                    print("Invalid days for given month")
+                    return None
+                else:
+                    return [year, month, day]
             else: # if input satisfies all bounds
-                print(year, f"{month:02}", f"{day:02}", sep="-")
-                return f"{year}-{month}-{day}"
+                return [year, month, day]
     except:
         pass
 
@@ -234,15 +272,16 @@ def get_date(date):
     print("3 Month DD, YYYY")
 
 ## create a funtion to determine if two users have overlapping dates in the same location
-def overlap():
-
-    ...
-
-
-## create a function that tells the user with who and when they can LinkUP
-def LinkUp():
-
-    ...
+def linkUp(user1, user2):
+    if user1.location == user2.location: # check for same trip location
+        latest_start = max(user1.startdate, user2.startdate) # find the overlapping dates
+        earliest_end = min(user1.enddate, user2.enddate)
+        delta = (earliest_end - latest_start).days + 1
+        overlap_days = max(0, delta) # find the number of overlapping days if any
+        return Trip(f"{user1.name} and {user2.name}", user1.location, latest_start, earliest_end, overlap_days)
+    else: # if no overlapping location
+        print(f"There is no overlapping locations within {user1.name}'s and {user2.name}'s trips")
+    
 
 
 if __name__ == "__main__":
