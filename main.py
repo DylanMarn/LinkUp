@@ -17,39 +17,48 @@ class User:
         self.location = location
         self.startdate = startdate
         self.enddate = enddate
+    
+    def __str__(self):
+        return f"{self.name} is traveling to {self.location} from {self.startdate} to {self.enddate}"
 
 def main():
 
 
-    user1 = user()
-    ...
+    user1 = set_user()
+
+    print(user1)
 
 
 ## create functions to get user input(name, location and dates) for 2+ users
 
-def user():
-
-    name = None
-    while not name:
+def set_user():
+    name = None # initalize name to nothing
+    while not name: # loop until valid name
         name = get_name(input("What is your name? "))
-        while True:
-            response = input(f"Hello {name}, is this how you would like to be addressed? (Y/N)").upper()
-            if response == "Y": # if confirmed, continue
-                break
-            elif response == "N": # if denied, reset end date
-                name = None
-                break
+        if name: # if valid name, confirm with user
+            while True: # loop until user confirms or denies
+                response = input(f"Hello {name}, is this how you would like to be addressed? (Y/N)").upper()
+                if response == "Y": # if confirmed, continue
+                    break
+                elif response == "N": # if denied, reset name
+                    name = None
+                    break
+                else:
+                    print("Invalid response")
 
-    state = None
-    while not state:
-        state = get_location(input("Where are you traveling? "))
-        while True:
-            response = input(f"{name}, it appears you are traveling to {state}, is this correct? (Y/N)").upper()
-            if response == "Y": # if confirmed, continue
-                break
-            elif response == "N": # if denied, reset end date
-                state = None
-                break
+    location = None # initalize state to nothing
+    while not location: # loop until valid state
+        location = get_location(input("Where are you traveling? "))
+        if location: # if valid state, confirm with user
+            while True: # loop until user confirms or denies
+                response = input(f"{name}, it appears you are traveling to {location}, is this correct? (Y/N)").upper()
+                if response == "Y": # if confirmed, continue
+                    break
+                elif response == "N": # if denied, reset state
+                    location = None
+                    break
+                else:
+                    print("Invalid response")
 
     s_date = None # initalize start date to nothing
     while not s_date: # loop until valid start date
@@ -63,6 +72,8 @@ def user():
                 elif response == "N": # if denied, reset start date
                     s_date = None
                     break
+                else:
+                    print("Invalid response")
 
 
     e_date = None # initalize end date to nothing
@@ -77,6 +88,10 @@ def user():
                 elif response == "N": # if denied, reset end date
                     e_date = None
                     break
+                else:
+                    print("Invalid response")
+
+    return User(name, location, s_date, e_date)
 
 ## create a function to get user name
 
@@ -87,7 +102,9 @@ def get_name(name):
 ## create a function to get user location
 
 def get_location(location):
-    location = location.strip().title()
+    location = location.strip().title() # clean up user input
+    # dictionary of US states and abbreviation as potential location names
+    # for further development, additional locations should be added
     states = {
         'AK': 'Alaska',
         'AL': 'Alabama',
@@ -142,16 +159,20 @@ def get_location(location):
         'WY': 'Wyoming'
     }
 
+    # list of keys and values to compare user input with
     keysList = list(states.keys())
+    for i in range(len(keysList)): # title case keys to match title cased input
+        keysList[i] = keysList[i].title()
     valuesList = list(states.values())
 
     if location in keysList:
-        return states[location]
+        return states[location.upper()] # return full state name if given abbreviated version (must use upper to index into dict)
     elif location in valuesList:
-        return location
+        return location # return user input if valid
     else:
         print("Invalid location")
         print("Currently only U.S. states supported")
+        return None
 
 ## create a function to get user date, returned in standard form
 
