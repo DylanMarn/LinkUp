@@ -20,20 +20,22 @@ Further development:
     add a "things to do" section that helps connected users find things to do in the area
 '''
 
+from operator import and_
 import re
 from datetime import date
 
 # class Trip stores important trip data
 class Trip:
-    def __init__(self, name, location, startdate, enddate, days=0):
+    def __init__(self, name, home, location=None, startdate=None, enddate=None, days=0):
         self.name = name
+        self.home = home
         self.location = location
         self.startdate = startdate
         self.enddate = enddate
         self.days = days
     
     def __str__(self):
-        return f"{self.name} is traveling to {self.location} from {self.startdate} to {self.enddate}"
+        return f"{self.name} is from {self.home} and traveling to {self.location} from {self.startdate} to {self.enddate}"
 
 
 def main():
@@ -41,23 +43,15 @@ def main():
     user1 = set_user() # get user #1 trip details
     print(f"\nPlease fill out the following for user #2")
     user2 = set_user() # get user #2 trip details
-
-    overlap = linkUp(user1, user2)
-    try: # in case overlap = None
-        if overlap.days > 0: # if overlapping time exists
-            print(user1)
-            print(user2)
-            print(f"{overlap.name} will both be in {overlap.location} from {overlap.startdate} to {overlap.enddate}")
-            print(f"{overlap.days} days to make memories")
-        else: # if no overlapping time
-            print(f"There is no overlapping time between {user1.name}'s and {user2.name}'s trips")
-    except:
-        pass
+    print(user1)
+    print(user2)
+    linkUp(user1, user2)
 
 
 ## create functions to get user input(name, location and dates) for 2+ users
 
 def set_user():
+    # get name
     name = None # initalize name to nothing
     while not name: # loop until valid name
         name = get_name(input("What is your name? "))
@@ -72,12 +66,13 @@ def set_user():
                 else:
                     print("Invalid response")
 
-    location = None # initalize state to nothing
-    while not location: # loop until valid state
-        location = get_location(input("Where are you traveling to? "))
-        if location: # if valid state, confirm with user
+    # get home location
+    home = None
+    while not home: # loop until valid state
+        home = get_location(input("Where are you currently? "))    
+        if home: # if valid state, confirm with user
             while True: # loop until user confirms or denies
-                response = input(f"{name}, it appears you are traveling to {location}, is this correct? (Y/N)").upper()
+                response = input(f"{name}, it appears you are currenly in {home}, is this correct? (Y/N)").upper()
                 if response == "Y": # if confirmed, continue
                     break
                 elif response == "N": # if denied, reset state
@@ -86,56 +81,83 @@ def set_user():
                 else:
                     print("Invalid response")
 
-    s_date = None # initalize start date to nothing
-    while not s_date: # loop until valid start date
-        s_date = get_date(input("Start date: "))
-        if s_date: # if valid start date, confirm with user
-            while True: # loop until user confirms or denies
-                print(f"The start of your trip is {date(*s_date)} %YYYY-MM-DD%")
-                response = input("Is this correct? (Y/N) ").upper()
-                if response == "Y": # if confirmed, continue
-                    break
-                elif response == "N": # if denied, reset start date
-                    s_date = None
-                    break
-                else:
-                    print("Invalid response")
-
-
-    e_date = None # initalize end date to nothing
-    while not e_date: # loop until valid end date
-        e_date = get_date(input("End date: "))
-        try:
-            if (date(*e_date) - date(*s_date)).days >= 0:
-                if e_date: # if valid start date, confirm with user
+    # determine if user has an upcoming trip
+    
+    while True:
+        trip = input("Do you have an upcoming trip? (Y/N)").upper()
+        if trip == "N":
+            return Trip(name, home)
+        elif trip == "Y":
+            # get trip location
+            location = None # initalize state to nothing
+            while not location: # loop until valid state
+                location = get_location(input("Where are you traveling to? "))
+                if location == home:
+                    print("You are already there")
+                    location = None
+                if location: # if valid state, confirm with user
                     while True: # loop until user confirms or denies
-                        print(f"The end of your trip is {date(*e_date)} %YYYY-MM-DD%")
-                        response = input("Is this correct? (Y/N) ").upper()
+                        response = input(f"{name}, it appears you are traveling to {location}, is this correct? (Y/N)").upper()
                         if response == "Y": # if confirmed, continue
                             break
-                        elif response == "N": # if denied, reset end date
-                            e_date = None
+                        elif response == "N": # if denied, reset state
+                            location = None
                             break
                         else:
                             print("Invalid response")
-            else:
-                e_date = None
-                print("Error: End date can not be before start date")
-        except:
-            pass
 
-    return Trip(name, location, date(*s_date), date(*e_date))
+            # get trip start date
+            s_date = None # initalize start date to nothing
+            while not s_date: # loop until valid start date
+                s_date = get_date(input("Start date: "))
+                if s_date: # if valid start date, confirm with user
+                    while True: # loop until user confirms or denies
+                        print(f"The start of your trip is {date(*s_date)} %YYYY-MM-DD%")
+                        response = input("Is this correct? (Y/N) ").upper()
+                        if response == "Y": # if confirmed, continue
+                            break
+                        elif response == "N": # if denied, reset start date
+                            s_date = None
+                            break
+                        else:
+                            print("Invalid response")
+
+            # get trip end date
+            e_date = None # initalize end date to nothing
+            while not e_date: # loop until valid end date
+                e_date = get_date(input("End date: "))
+                try:
+                    if (date(*e_date) - date(*s_date)).days >= 0:
+                        if e_date: # if valid start date, confirm with user
+                            while True: # loop until user confirms or denies
+                                print(f"The end of your trip is {date(*e_date)} %YYYY-MM-DD%")
+                                response = input("Is this correct? (Y/N) ").upper()
+                                if response == "Y": # if confirmed, continue
+                                    break
+                                elif response == "N": # if denied, reset end date
+                                    e_date = None
+                                    break
+                                else:
+                                    print("Invalid response")
+                    else:
+                        e_date = None
+                        print("Error: End date can not be before start date")
+                except:
+                    pass
+
+            return Trip(name, home, location, date(*s_date), date(*e_date))
+
+        else:
+            print("Invalid response")
 
 
 ## create a function to get user name
-
 def get_name(name):
     name = name.strip().title()
     return name 
 
 
 ## create a function to get user location
-
 def get_location(location):
     location = location.strip().title() # clean up user input
     # dictionary of US states and abbreviation as potential location names
@@ -211,7 +233,6 @@ def get_location(location):
 
 
 ## create a function to get user date, returned in standard form
-
 def get_date(givendate):
     # create a dict of months and corresponding number
     months = {
@@ -288,16 +309,70 @@ def get_date(givendate):
 
 
 ## create a funtion to determine if two users have overlapping dates in the same location
-
 def linkUp(user1, user2):
-    if user1.location == user2.location: # check for same trip location
-        latest_start = max(user1.startdate, user2.startdate) # find the overlapping dates
-        earliest_end = min(user1.enddate, user2.enddate)
-        delta = (earliest_end - latest_start).days + 1
-        overlap_days = max(0, delta) # find the number of overlapping days if any
-        return Trip(f"{user1.name} and {user2.name}", user1.location, latest_start, earliest_end, overlap_days)
-    else: # if no overlapping location
-        print(f"There is no overlapping locations within {user1.name}'s and {user2.name}'s trips")
+    if not user1.location and not user2.location: # if neither users have a trip
+        if user1.home == user2.home: # only linkUp if homes are the same
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} indefinetly")
+        else: # else there is no overlap
+            print(f"There is no overlapping period within {user1.name}'s and {user2.name}'s locations")
+    elif not user1.location and user2.location: # if only user2 has a trip
+        if user1.home == user2.home: # if homes are the same, linkUp until user2 leaves
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} until {user2.startdate}")
+        elif user1.home == user2.location: # if user2's trip is to user1's home, linkUp for duration of user2's trip
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} from {user2.startdate} to {user2.enddate}")
+        else: # else there is no overlap
+            print(f"There is no overlapping period within {user1.name}'s and {user2.name}'s locations")
+    elif user1.location and not user2.location: # if only user1 has a trip
+        if user1.home == user2.home: # if homes are the same, linkUp until user1 leaves
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} until {user1.startdate}")
+        elif user2.home == user1.location: # if user1's trip is to user2's home, linkUp for duration of user1's trip
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} from {user1.startdate} to {user1.enddate}")
+        else: # else there is no overlap
+            print(f"There is no overlapping period within {user1.name}'s and {user2.name}'s locations")
+    elif user1.location and user2.location: # if both users have a trip
+        earliest_start = min(user1.startdate, user2.startdate)
+        latest_start = max(user1.startdate, user2.startdate) 
+        earliest_end = min(user1.enddate, user2.enddate) 
+        latest_end = max(user1.enddate, user2.enddate)       
+        if user1.home == user2.home and user1.location != user2.location: # if home location is the same but not trip location, linkUp until first user to leave 
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} until {earliest_start}")
+        elif user1.home == user2.home and user1.location == user2.location: # if home location and trip location is the same
+            print(f"{user1.name} and {user2.name} will both be in {user1.home} until {earliest_start}")
+            if latest_start < earliest_end:
+                print(f"They will both be in {user1.location} from {latest_start} to {earliest_end}")
+            elif latest_start > earliest_end:
+                print(f"They will both be back in {user1.home} from {earliest_end} to {latest_start}")
+            else:
+                print(f"They will both be back in {user1.home} only on {latest_start}")
+            print(f"and finally will both be in {user1.home} from {earliest_start} indefinetly")
+        elif user1.home == user2.location and user2.home == user1.location: # if user1's trip is to user2's home and if user2's trip is to user1's home
+            if user1.enddate < user2.startdate:
+                print(f"{user1.name} and {user2.name} will both be in {user1.location} from {earliest_start} to {earliest_end}")
+                print(f"They will both be in {user2.location} from {latest_start} to {latest_end}")
+            elif user2.enddate < user1.startdate:
+                print(f"{user1.name} and {user2.name} will both be in {user2.location} from {earliest_start} to {earliest_end}")
+                print(f"They will both be in {user1.location} from {latest_start} to {latest_end}")
+
+            if user1.startdate > user2.startdate and user1.startdate < user2.enddate:
+                print(f"{user1.name} and {user2.name} will both be in {user1.home} from {earliest_start} to {latest_start}")
+            elif user2.startdate > user1.startdate and user2.startdate < user1.enddate:
+                print(f"{user1.name} and {user2.name} will both be in {user2.home} from {earliest_start} to {latest_start}")
+            elif user1.startdate == user2.startdate:
+                print(f"They just misses each other on {earliest_start}")
+            
+            if user1.enddate < user2.enddate and user1.enddate > user2.startdate:
+                print(f"They will both be in {user1.home} from {earliest_end} to {latest_end}")
+            elif user2.enddate < user1.enddate and user2.enddate > user1.startdate:
+                print(f"They will both be in {user1.location} from {earliest_end} to {latest_end}") 
+            elif user1.enddate == user2.enddate:
+                print(f"They just misses each other on {latest_end}") 
+        
+        elif user1.home != user2.home and user1.location == user2.location: # if trip location is the same but not home
+            delta = (earliest_end - latest_start).days + 1
+            overlap_days = max(0, delta) # find the number of overlapping days if any
+            print(f"{user1.name} and {user2.name} will both be in {user1.location} from {latest_start} to {earliest_end}")
+    else: # if home location and trip location is not the same
+        print(f"There is no overlapping time within {user1.name}'s and {user2.name}'s locations")
     
 
 if __name__ == "__main__":
